@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>你来比划我来猜</title>
+    <style>
+        body {
+            font-family: '微软雅黑', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        h1 {
+            text-align: center;
+            color: white;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .random-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 20px 40px;
+            font-size: 1.8em;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            margin-top: 50px;
+        }
+        
+        .random-btn:hover {
+            background: #764ba2;
+            transform: scale(1.05);
+        }
+        
+        .selected-card {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border: 4px solid #667eea;
+            border-radius: 20px;
+            padding: 40px;
+            color: #2d3748;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            z-index: 1000;
+            min-width: 300px;
+            text-align: center;
+        }
+        
+        .selected-card #selected-word-container {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #2d3748;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            cursor: pointer; 
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 2em;
+            cursor: pointer;
+            color: #718096;
+        }
+        
+        .links-container {
+            margin-top: 30px;
+            display: flex;
+            gap: 20px;
+        }
+        
+        .links-container a {
+            color: white;
+            text-decoration: none;
+            border-bottom: 1px solid white;
+            padding-bottom: 2px;
+            font-size: 1.2em;
+            transition: all 0.3s ease;
+        }
+        
+        .links-container a:hover {
+            color: #e0e0e0;
+            border-color: #e0e0e0;
+        }
+
+        .hidden {
+            display: none !important;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎭 你来比划我来猜 🎭</h1>
+        
+        <button class="random-btn">🎲 随机选择词语</button>
+        
+        <div class="links-container">
+            <a href="rules.html">查看游戏规则</a>
+            <a href="manage.html">管理词卡</a>
+        </div>
+    </div>
+    
+    <div class="overlay hidden"></div>
+    <div class="selected-card hidden">
+        <button class="close-btn">&times;</button>
+        <div id="selected-word-container">
+            <span id="selected-word-text"></span>
+        </div>
+    </div>
+    
+    <script type="module">
+        import { getAllCards } from './cards.js';
+
+        let allCards = [];
+        const randomBtn = document.querySelector('.random-btn');
+        const overlay = document.querySelector('.overlay');
+        const selectedCard = document.querySelector('.selected-card');
+        const selectedWordText = document.getElementById('selected-word-text');
+        const closeBtn = document.querySelector('.close-btn');
+
+        async function initialize() {
+            try {
+                randomBtn.disabled = true;
+                randomBtn.textContent = '正在加载词库...';
+                allCards = await getAllCards();
+                randomBtn.disabled = false;
+                randomBtn.textContent = '🎲 随机选择词语';
+                 if (allCards.length === 0) {
+                    randomBtn.textContent = '词库为空';
+                }
+            } catch (e) {
+                randomBtn.textContent = '加载失败';
+            }
+        }
+
+        function showCard(card) {
+            selectedWordText.textContent = card.word;
+            overlay.classList.remove('hidden');
+            selectedCard.classList.remove('hidden');
+        }
+        
+        function hideCard() {
+            overlay.classList.add('hidden');
+            selectedCard.classList.add('hidden');
+        }
+        
+        function randomCard() {
+            if (allCards.length === 0) {
+                selectedWordText.textContent = '词库为空，请先添加词语';
+                overlay.classList.remove('hidden');
+                selectedCard.classList.remove('hidden');
+                return;
+            }
+
+            overlay.classList.remove('hidden');
+            selectedCard.classList.remove('hidden');
+
+            selectedWordText.textContent = '词卡抽取中...';
+
+            setTimeout(() => {
+                const finalRandomCardData = allCards[Math.floor(Math.random() * allCards.length)];
+                showCard(finalRandomCardData);
+            }, 1000);
+        }
+
+        randomBtn.addEventListener('click', randomCard);
+        closeBtn.addEventListener('click', hideCard);
+        overlay.addEventListener('click', hideCard);
+
+        initialize();
+    </script>
+</body>
+</html>

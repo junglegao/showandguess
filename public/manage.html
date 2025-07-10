@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>你来比划我来猜 - 词库管理</title>
+    <style>
+        body { 
+            font-family: '微软雅黑', sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            color: #333; margin: 0; padding: 20px; min-height: 100vh;
+            display: flex; justify-content: center; align-items: flex-start;
+        }
+        .container { 
+            width: 100%;
+            max-width: 600px; 
+            background: #fff; 
+            border-radius: 15px; 
+            padding: 30px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+        h1 { text-align: center; color: #4a5568; margin-bottom: 25px; }
+        .add-word-form { display: flex; gap: 10px; margin-bottom: 25px; }
+        #new-word-input { 
+            flex-grow: 1; 
+            padding: 12px; 
+            border: 2px solid #ddd; 
+            border-radius: 8px; 
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+        #new-word-input:focus { border-color: #667eea; outline: none; }
+        #add-word-btn {
+            padding: 12px 25px;
+            background-color: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        #add-word-btn:hover { background-color: #5a67d8; }
+        #words-list { list-style: none; padding: 0; max-height: 50vh; overflow-y: auto; }
+        .word-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            font-size: 1.1em;
+        }
+        .word-item:last-child { border-bottom: none; }
+        .delete-btn {
+            background: #e53e3e;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s;
+        }
+        .delete-btn:hover { background-color: #c53030; }
+        .back-btn {
+            display: inline-block;
+            margin-top: 25px;
+            padding: 10px 25px;
+            background: #4a5568;
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            text-align: center;
+            width: calc(100% - 50px);
+        }
+        .back-btn:hover { background: #2d3748; transform: scale(1.02); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📝 词库管理</h1>
+        <div class="add-word-form">
+            <input type="text" id="new-word-input" placeholder="输入新词语...">
+            <button id="add-word-btn">添加</button>
+        </div>
+        <ul id="words-list"></ul>
+        <a href="/index.html" class="back-btn">返回主页</a>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const wordsList = document.getElementById('words-list');
+            const newWordInput = document.getElementById('new-word-input');
+            const addWordBtn = document.getElementById('add-word-btn');
+            const API_URL = '/api/words';
+
+            // Fetch and render all words
+            async function fetchWords() {
+                try {
+                    const response = await fetch(API_URL);
+                    if (!response.ok) throw new Error('Failed to fetch words.');
+                    const words = await response.json();
+                    renderWords(words);
+                } catch (error) {
+                    console.error('Error fetching words:', error);
+                    wordsList.innerHTML = '<li>加载词库失败，请检查后端服务是否运行。</li>';
+                }
+            }
+
+            // Render words in the list
+            function renderWords(words) {
+                wordsList.innerHTML = '';
+                if (words.length === 0) {
+                    wordsList.innerHTML = '<li>词库是空的，快添加一个吧！</li>';
+                    return;
+                }
+                words.forEach(word => {
+                    const li = document.createElement('li');
+                    li.className = 'word-item';
+                    li.innerHTML = `
+                        <span>${word}</span>
+                        <button class="delete-btn" data-word="${word}">删除</button>
+                    `;
+                    wordsList.appendChild(li);
+                });
+            }
+
+            // Add a new word
+            async function addWord() {
+                const word = newWordInput.value.trim();
+                if (!word) return;
+
+                try {
+                    const response = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ word })
+                    });
+                    if (!response.ok) throw new Error('Failed to add word.');
+                    newWordInput.value = '';
+                    fetchWords(); // Refresh list
+                } catch (error) {
+                    console.error('Error adding word:', error);
+                    alert('添加失败，请重试。');
+                }
+            }
+
+            // Delete a word
+            async function deleteWord(word) {
+                if (!confirm(`确定要删除 “${word}” 吗？`)) return;
+
+                try {
+                    const response = await fetch(API_URL, {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ word })
+                    });
+                    if (!response.ok) throw new Error('Failed to delete word.');
+                    fetchWords(); // Refresh list
+                } catch (error) {
+                    console.error('Error deleting word:', error);
+                    alert('删除失败，请重试。');
+                }
+            }
+
+            // Event Listeners
+            addWordBtn.addEventListener('click', addWord);
+            newWordInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') addWord();
+            });
+
+            wordsList.addEventListener('click', (e) => {
+                if (e.target.classList.contains('delete-btn')) {
+                    const word = e.target.dataset.word;
+                    deleteWord(word);
+                }
+            });
+
+            // Initial load
+            fetchWords();
+        });
+    </script>
+</body>
+</html>
