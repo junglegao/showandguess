@@ -139,6 +139,11 @@
             }
 
             function renderCards(cards) {
+                const difficultyMap = {
+                    easy: '简单',
+                    medium: '中等',
+                    hard: '困难'
+                };
                 cardsListBody.innerHTML = '';
                 if (cards.length === 0) {
                     cardsListBody.innerHTML = '<tr><td colspan="4">词库是空的，快添加一个吧！</td></tr>';
@@ -149,7 +154,7 @@
                     tr.innerHTML = `
                         <td>${card.word}</td>
                         <td>${card.hint}</td>
-                        <td>${card.difficulty}</td>
+                        <td>${difficultyMap[card.difficulty] || card.difficulty}</td>
                         <td><button class="delete-btn" data-word="${card.word}">删除</button></td>
                     `;
                     cardsListBody.appendChild(tr);
