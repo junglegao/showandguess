@@ -5,26 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>你来比划我来猜 - 词库管理</title>
     <style>
-        body { 
-            font-family: '微软雅黑', sans-serif; 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+        body {
+            font-family: '微软雅黑', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: #333; margin: 0; padding: 20px; min-height: 100vh;
         }
-        .container { 
+        .container {
             width: 100%;
-            max-width: 800px; 
+            max-width: 1000px; /* Increased max-width for more columns */
             margin: 20px auto;
-            background: #fff; 
-            border-radius: 15px; 
-            padding: 30px; 
+            background: #fff;
+            border-radius: 15px;
+            padding: 30px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.15);
         }
         h1 { text-align: center; color: #4a5568; margin-bottom: 25px; }
-        .add-card-form { 
+        .add-card-form {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 15px;
-            margin-bottom: 25px; 
+            margin-bottom: 25px;
         }
         .form-group { grid-column: 1 / -1; }
         .form-group-split { display: contents; }
@@ -51,24 +51,51 @@
             transition: background-color 0.3s;
         }
         #add-card-btn:hover { background-color: #5a67d8; }
-        .cards-table { width: 100%; border-collapse: collapse; }
-        .cards-table th, .cards-table td { 
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #eee;
+
+        /* Masonry Layout Styles */
+        .cards-masonry-grid {
+            column-count: 3; /* Default 3 columns */
+            column-gap: 20px;
+            max-height: 60vh; /* Limit height and enable scrolling */
+            overflow-y: auto;
+            padding-right: 10px; /* Space for scrollbar */
         }
-        .cards-table th { background-color: #f7fafc; color: #4a5568; }
-        .delete-btn {
+        .card-item {
+            background: #f9f9f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px; /* Gap between cards in a column */
+            break-inside: avoid; /* Prevent cards from breaking across columns */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            position: relative;
+        }
+        .card-item h3 { margin-top: 0; margin-bottom: 10px; color: #2d3748; font-size: 1.3em; }
+        .card-item p { margin-bottom: 5px; font-size: 0.95em; color: #4a5568; }
+        .card-item .difficulty-label { font-weight: bold; color: #667eea; }
+        .card-item .delete-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
             background: #e53e3e;
             color: white;
             border: none;
-            border-radius: 6px;
-            padding: 6px 12px;
+            border-radius: 5px;
+            padding: 5px 10px;
             cursor: pointer;
-            font-size: 0.9em;
+            font-size: 0.8em;
             transition: background-color 0.3s;
         }
-        .delete-btn:hover { background-color: #c53030; }
+        .card-item .delete-btn:hover { background-color: #c53030; }
+
+        /* Responsive adjustments for columns */
+        @media (max-width: 768px) {
+            .cards-masonry-grid { column-count: 2; }
+        }
+        @media (max-width: 480px) {
+            .cards-masonry-grid { column-count: 1; }
+        }
+
         .back-btn {
             display: block;
             width: fit-content;
@@ -101,25 +128,13 @@
             </div>
             <button id="add-card-btn">添加词卡</button>
         </div>
-        <div style="max-height: 50vh; overflow-y: auto;">
-            <table class="cards-table">
-                <thead>
-                    <tr>
-                        <th>词语</th>
-                        <th>提示</th>
-                        <th>难度</th>
-                        <th>操作</th>
-                    </tr>
-                </thead>
-                <tbody id="cards-list-body"></tbody>
-            </table>
-        </div>
+        <div class="cards-masonry-grid" id="cards-display-area"></div>
         <a href="/index.html" class="back-btn">返回主页</a>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const cardsListBody = document.getElementById('cards-list-body');
+            const cardsDisplayArea = document.getElementById('cards-display-area');
             const newWordInput = document.getElementById('new-word-input');
             const newHintInput = document.getElementById('new-hint-input');
             const newDifficultySelect = document.getElementById('new-difficulty-select');
@@ -134,7 +149,7 @@
                     renderCards(cards);
                 } catch (error) {
                     console.error('Error fetching cards:', error);
-                    cardsListBody.innerHTML = '<tr><td colspan="4">加载词库失败...</td></tr>';
+                    cardsDisplayArea.innerHTML = '<p style="text-align: center; color: #718096;">加载词库失败...</p>';
                 }
             }
 
@@ -144,20 +159,21 @@
                     medium: '中等',
                     hard: '困难'
                 };
-                cardsListBody.innerHTML = '';
+                cardsDisplayArea.innerHTML = '';
                 if (cards.length === 0) {
-                    cardsListBody.innerHTML = '<tr><td colspan="4">词库是空的，快添加一个吧！</td></tr>';
+                    cardsDisplayArea.innerHTML = '<p style="text-align: center; color: #718096;">词库是空的，快添加一个吧！</p>';
                     return;
                 }
                 cards.forEach(card => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td>${card.word}</td>
-                        <td>${card.hint}</td>
-                        <td>${difficultyMap[card.difficulty] || card.difficulty}</td>
-                        <td><button class="delete-btn" data-word="${card.word}">删除</button></td>
+                    const cardDiv = document.createElement('div');
+                    cardDiv.classList.add('card-item');
+                    cardDiv.innerHTML = `
+                        <h3>${card.word}</h3>
+                        <p>提示: ${card.hint}</p>
+                        <p class="difficulty-label">难度: ${difficultyMap[card.difficulty] || card.difficulty}</p>
+                        <button class="delete-btn" data-word="${card.word}">删除</button>
                     `;
-                    cardsListBody.appendChild(tr);
+                    cardsDisplayArea.appendChild(cardDiv);
                 });
             }
 
@@ -207,7 +223,7 @@
             }
 
             addCardBtn.addEventListener('click', addCard);
-            cardsListBody.addEventListener('click', (e) => {
+            cardsDisplayArea.addEventListener('click', (e) => {
                 if (e.target.classList.contains('delete-btn')) {
                     const word = e.target.dataset.word;
                     deleteCard(word);
