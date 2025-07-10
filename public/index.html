@@ -8,118 +8,60 @@
         body {
             font-family: '微软雅黑', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            margin: 0;
-            padding: 20px;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            margin: 0; padding: 20px; min-height: 100vh;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            text-align: center;
-        }
-        
+        .container { max-width: 1200px; margin: 0 auto; text-align: center; }
         h1 {
-            text-align: center;
-            color: white;
-            font-size: 2.5em;
-            margin-bottom: 30px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            text-align: center; color: white; font-size: 2.5em; 
+            margin-bottom: 30px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
-        
         .random-btn {
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 50px;
-            padding: 20px 40px;
-            font-size: 1.8em;
-            cursor: pointer;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
-            transition: all 0.3s ease;
-            margin-top: 50px;
+            background: #667eea; color: white; border: none; border-radius: 50px;
+            padding: 20px 40px; font-size: 1.8em; cursor: pointer;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2); transition: all 0.3s ease; margin-top: 30px;
         }
-        
-        .random-btn:hover {
-            background: #764ba2;
-            transform: scale(1.05);
-        }
-        
+        .random-btn:hover { background: #764ba2; transform: scale(1.05); }
+        .random-btn:disabled { background: #a0aec0; cursor: not-allowed; }
         .selected-card {
-            position: fixed;
-            top: 50%;
-            left: 50%;
+            position: fixed; top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            background: white;
-            border: 4px solid #667eea;
-            border-radius: 20px;
-            padding: 40px;
-            color: #2d3748;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
-            z-index: 1000;
-            min-width: 300px;
-            text-align: center;
+            background: white; border: 4px solid #667eea; border-radius: 20px;
+            padding: 40px; color: #2d3748; box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            z-index: 1000; min-width: 300px; text-align: center;
         }
-        
-        .selected-card #selected-word-container {
-            font-size: 2.5em;
-            font-weight: bold;
-            color: #2d3748;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+        #selected-word-container {
+            font-size: 2.5em; font-weight: bold; color: #2d3748;
+            display: flex; justify-content: center; align-items: center;
             margin-bottom: 8px;
         }
-
+        #selected-difficulty-icon { font-size: 0.8em; margin-right: 10px; }
+        .card-hint-display { font-size: 1.2em; color: #718096; font-style: italic; margin-top: 15px; }
         .overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 999;
-            cursor: pointer; 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 999; cursor: pointer; 
         }
-        
         .close-btn {
-            position: absolute;
-            top: 10px;
-            right: 15px;
-            background: none;
-            border: none;
-            font-size: 2em;
-            cursor: pointer;
-            color: #718096;
+            position: absolute; top: 10px; right: 15px; background: none; border: none;
+            font-size: 2em; cursor: pointer; color: #718096;
         }
-        
-        .links-container {
-            margin-top: 30px;
-            display: flex;
-            gap: 20px;
-        }
-        
+        .links-container { margin-top: 30px; display: flex; gap: 20px; }
         .links-container a {
-            color: white;
-            text-decoration: none;
-            border-bottom: 1px solid white;
-            padding-bottom: 2px;
-            font-size: 1.2em;
-            transition: all 0.3s ease;
+            color: white; text-decoration: none; border-bottom: 1px solid white;
+            padding-bottom: 2px; font-size: 1.2em; transition: all 0.3s ease;
         }
-        
-        .links-container a:hover {
-            color: #e0e0e0;
-            border-color: #e0e0e0;
+        .links-container a:hover { color: #e0e0e0; border-color: #e0e0e0; }
+        .hidden { display: none !important; pointer-events: none; }
+        .difficulty-selection {
+            margin-top: 30px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
         }
-
-        .hidden {
-            display: none !important;
-            pointer-events: none;
+        .difficulty-selection button {
+            background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.5);
+            border-radius: 20px; padding: 8px 15px; font-size: 1em; cursor: pointer; transition: all 0.3s ease;
+        }
+        .difficulty-selection button:hover { background: rgba(255,255,255,0.3); }
+        .difficulty-selection button.active {
+            background: white; color: #667eea; font-weight: bold; box-shadow: 0 2px 10px rgba(0,0,0,0.2);
         }
     </style>
 </head>
@@ -127,6 +69,13 @@
     <div class="container">
         <h1>🎭 你来比划我来猜 🎭</h1>
         
+        <div class="difficulty-selection">
+            <button id="difficulty-all" class="active">全部</button>
+            <button id="difficulty-easy">简单</button>
+            <button id="difficulty-medium">中等</button>
+            <button id="difficulty-hard">困难</button>
+        </div>
+
         <button class="random-btn">🎲 随机选择词语</button>
         
         <div class="links-container">
@@ -139,19 +88,26 @@
     <div class="selected-card hidden">
         <button class="close-btn">&times;</button>
         <div id="selected-word-container">
+            <span id="selected-difficulty-icon"></span>
             <span id="selected-word-text"></span>
         </div>
+        <div id="selected-hint" class="card-hint-display"></div>
     </div>
     
     <script type="module">
         import { getAllCards } from './cards.js';
 
         let allCards = [];
+        let currentDifficulty = 'all';
+
         const randomBtn = document.querySelector('.random-btn');
         const overlay = document.querySelector('.overlay');
         const selectedCard = document.querySelector('.selected-card');
         const selectedWordText = document.getElementById('selected-word-text');
+        const selectedHintDisplay = document.getElementById('selected-hint');
+        const selectedDifficultyIcon = document.getElementById('selected-difficulty-icon');
         const closeBtn = document.querySelector('.close-btn');
+        const difficultyButtons = document.querySelectorAll('.difficulty-selection button');
 
         async function initialize() {
             try {
@@ -160,16 +116,39 @@
                 allCards = await getAllCards();
                 randomBtn.disabled = false;
                 randomBtn.textContent = '🎲 随机选择词语';
-                 if (allCards.length === 0) {
+                if (allCards.length === 0) {
                     randomBtn.textContent = '词库为空';
                 }
             } catch (e) {
                 randomBtn.textContent = '加载失败';
+                console.error("Failed to initialize:", e);
             }
+        }
+
+        function setDifficulty(difficulty) {
+            currentDifficulty = difficulty;
+            difficultyButtons.forEach(button => {
+                button.classList.remove('active');
+                if (button.id === `difficulty-${difficulty}`) {
+                    button.classList.add('active');
+                }
+            });
         }
 
         function showCard(card) {
             selectedWordText.textContent = card.word;
+            selectedHintDisplay.textContent = card.hint;
+
+            if (card.difficulty === 'easy') {
+                selectedDifficultyIcon.textContent = '🟢';
+            } else if (card.difficulty === 'medium') {
+                selectedDifficultyIcon.textContent = '🟡';
+            } else if (card.difficulty === 'hard') {
+                selectedDifficultyIcon.textContent = '🔴';
+            } else {
+                selectedDifficultyIcon.textContent = '';
+            }
+
             overlay.classList.remove('hidden');
             selectedCard.classList.remove('hidden');
         }
@@ -180,10 +159,12 @@
         }
         
         function randomCard() {
-            if (allCards.length === 0) {
-                selectedWordText.textContent = '词库为空，请先添加词语';
-                overlay.classList.remove('hidden');
-                selectedCard.classList.remove('hidden');
+            const filteredCards = allCards.filter(card => 
+                currentDifficulty === 'all' || card.difficulty === currentDifficulty
+            );
+
+            if (filteredCards.length === 0) {
+                showCard({ word: '没有符合的词卡', hint: '请尝试其他难度或添加新词卡', difficulty: '' });
                 return;
             }
 
@@ -191,16 +172,25 @@
             selectedCard.classList.remove('hidden');
 
             selectedWordText.textContent = '词卡抽取中...';
+            selectedHintDisplay.textContent = '';
+            selectedDifficultyIcon.textContent = '';
 
             setTimeout(() => {
-                const finalRandomCardData = allCards[Math.floor(Math.random() * allCards.length)];
+                const finalRandomCardData = filteredCards[Math.floor(Math.random() * filteredCards.length)];
                 showCard(finalRandomCardData);
             }, 1000);
         }
 
+        // Event Listeners
         randomBtn.addEventListener('click', randomCard);
         closeBtn.addEventListener('click', hideCard);
         overlay.addEventListener('click', hideCard);
+        difficultyButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const difficulty = button.id.replace('difficulty-', '');
+                setDifficulty(difficulty);
+            });
+        });
 
         initialize();
     </script>

@@ -9,49 +9,55 @@
             font-family: '微软雅黑', sans-serif; 
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
             color: #333; margin: 0; padding: 20px; min-height: 100vh;
-            display: flex; justify-content: center; align-items: flex-start;
         }
         .container { 
             width: 100%;
-            max-width: 600px; 
+            max-width: 800px; 
+            margin: 20px auto;
             background: #fff; 
             border-radius: 15px; 
             padding: 30px; 
             box-shadow: 0 10px 30px rgba(0,0,0,0.15);
         }
         h1 { text-align: center; color: #4a5568; margin-bottom: 25px; }
-        .add-word-form { display: flex; gap: 10px; margin-bottom: 25px; }
-        #new-word-input { 
-            flex-grow: 1; 
-            padding: 12px; 
-            border: 2px solid #ddd; 
-            border-radius: 8px; 
+        .add-card-form { 
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px; 
+        }
+        .form-group { grid-column: 1 / -1; }
+        .form-group-split { display: contents; }
+        .add-card-form input, .add-card-form select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
             font-size: 1em;
+            box-sizing: border-box;
             transition: border-color 0.3s;
         }
-        #new-word-input:focus { border-color: #667eea; outline: none; }
-        #add-word-btn {
+        .add-card-form input:focus, .add-card-form select:focus { border-color: #667eea; outline: none; }
+        #add-card-btn {
+            grid-column: 1 / -1;
             padding: 12px 25px;
             background-color: #667eea;
             color: white;
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 1em;
+            font-size: 1.1em;
             font-weight: bold;
             transition: background-color 0.3s;
         }
-        #add-word-btn:hover { background-color: #5a67d8; }
-        #words-list { list-style: none; padding: 0; max-height: 50vh; overflow-y: auto; }
-        .word-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        #add-card-btn:hover { background-color: #5a67d8; }
+        .cards-table { width: 100%; border-collapse: collapse; }
+        .cards-table th, .cards-table td { 
             padding: 12px;
+            text-align: left;
             border-bottom: 1px solid #eee;
-            font-size: 1.1em;
         }
-        .word-item:last-child { border-bottom: none; }
+        .cards-table th { background-color: #f7fafc; color: #4a5568; }
         .delete-btn {
             background: #e53e3e;
             color: white;
@@ -64,8 +70,9 @@
         }
         .delete-btn:hover { background-color: #c53030; }
         .back-btn {
-            display: inline-block;
-            margin-top: 25px;
+            display: block;
+            width: fit-content;
+            margin: 25px auto 0;
             padding: 10px 25px;
             background: #4a5568;
             color: white;
@@ -73,8 +80,6 @@
             border-radius: 50px;
             font-size: 1em;
             transition: all 0.3s ease;
-            text-align: center;
-            width: calc(100% - 50px);
         }
         .back-btn:hover { background: #2d3748; transform: scale(1.02); }
     </style>
@@ -82,74 +87,104 @@
 <body>
     <div class="container">
         <h1>📝 词库管理</h1>
-        <div class="add-word-form">
-            <input type="text" id="new-word-input" placeholder="输入新词语...">
-            <button id="add-word-btn">添加</button>
+        <div class="add-card-form">
+            <div class="form-group-split">
+                <input type="text" id="new-word-input" placeholder="输入新词语...">
+                <select id="new-difficulty-select">
+                    <option value="easy">简单</option>
+                    <option value="medium">中等</option>
+                    <option value="hard">困难</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <input type="text" id="new-hint-input" placeholder="输入相关提示...">
+            </div>
+            <button id="add-card-btn">添加词卡</button>
         </div>
-        <ul id="words-list"></ul>
+        <div style="max-height: 50vh; overflow-y: auto;">
+            <table class="cards-table">
+                <thead>
+                    <tr>
+                        <th>词语</th>
+                        <th>提示</th>
+                        <th>难度</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="cards-list-body"></tbody>
+            </table>
+        </div>
         <a href="/index.html" class="back-btn">返回主页</a>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const wordsList = document.getElementById('words-list');
+            const cardsListBody = document.getElementById('cards-list-body');
             const newWordInput = document.getElementById('new-word-input');
-            const addWordBtn = document.getElementById('add-word-btn');
+            const newHintInput = document.getElementById('new-hint-input');
+            const newDifficultySelect = document.getElementById('new-difficulty-select');
+            const addCardBtn = document.getElementById('add-card-btn');
             const API_URL = '/api/words';
 
-            // Fetch and render all words
-            async function fetchWords() {
+            async function fetchCards() {
                 try {
                     const response = await fetch(API_URL);
-                    if (!response.ok) throw new Error('Failed to fetch words.');
-                    const words = await response.json();
-                    renderWords(words);
+                    if (!response.ok) throw new Error('Failed to fetch cards.');
+                    const cards = await response.json();
+                    renderCards(cards);
                 } catch (error) {
-                    console.error('Error fetching words:', error);
-                    wordsList.innerHTML = '<li>加载词库失败，请检查后端服务是否运行。</li>';
+                    console.error('Error fetching cards:', error);
+                    cardsListBody.innerHTML = '<tr><td colspan="4">加载词库失败...</td></tr>';
                 }
             }
 
-            // Render words in the list
-            function renderWords(words) {
-                wordsList.innerHTML = '';
-                if (words.length === 0) {
-                    wordsList.innerHTML = '<li>词库是空的，快添加一个吧！</li>';
+            function renderCards(cards) {
+                cardsListBody.innerHTML = '';
+                if (cards.length === 0) {
+                    cardsListBody.innerHTML = '<tr><td colspan="4">词库是空的，快添加一个吧！</td></tr>';
                     return;
                 }
-                words.forEach(word => {
-                    const li = document.createElement('li');
-                    li.className = 'word-item';
-                    li.innerHTML = `
-                        <span>${word}</span>
-                        <button class="delete-btn" data-word="${word}">删除</button>
+                cards.forEach(card => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${card.word}</td>
+                        <td>${card.hint}</td>
+                        <td>${card.difficulty}</td>
+                        <td><button class="delete-btn" data-word="${card.word}">删除</button></td>
                     `;
-                    wordsList.appendChild(li);
+                    cardsListBody.appendChild(tr);
                 });
             }
 
-            // Add a new word
-            async function addWord() {
+            async function addCard() {
                 const word = newWordInput.value.trim();
-                if (!word) return;
+                const hint = newHintInput.value.trim();
+                const difficulty = newDifficultySelect.value;
+
+                if (!word || !hint) {
+                    alert('词语和提示不能为空！');
+                    return;
+                }
+
+                const newCard = { word, hint, difficulty };
 
                 try {
                     const response = await fetch(API_URL, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ word })
+                        body: JSON.stringify(newCard)
                     });
-                    if (!response.ok) throw new Error('Failed to add word.');
+                    if (!response.ok) throw new Error('Failed to add card.');
                     newWordInput.value = '';
-                    fetchWords(); // Refresh list
+                    newHintInput.value = '';
+                    fetchCards();
                 } catch (error) {
-                    console.error('Error adding word:', error);
+                    console.error('Error adding card:', error);
                     alert('添加失败，请重试。');
                 }
             }
 
-            // Delete a word
-            async function deleteWord(word) {
+            async function deleteCard(word) {
                 if (!confirm(`确定要删除 “${word}” 吗？`)) return;
 
                 try {
@@ -158,29 +193,23 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ word })
                     });
-                    if (!response.ok) throw new Error('Failed to delete word.');
-                    fetchWords(); // Refresh list
+                    if (!response.ok) throw new Error('Failed to delete card.');
+                    fetchCards();
                 } catch (error) {
-                    console.error('Error deleting word:', error);
+                    console.error('Error deleting card:', error);
                     alert('删除失败，请重试。');
                 }
             }
 
-            // Event Listeners
-            addWordBtn.addEventListener('click', addWord);
-            newWordInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') addWord();
-            });
-
-            wordsList.addEventListener('click', (e) => {
+            addCardBtn.addEventListener('click', addCard);
+            cardsListBody.addEventListener('click', (e) => {
                 if (e.target.classList.contains('delete-btn')) {
                     const word = e.target.dataset.word;
-                    deleteWord(word);
+                    deleteCard(word);
                 }
             });
 
-            // Initial load
-            fetchWords();
+            fetchCards();
         });
     </script>
 </body>
