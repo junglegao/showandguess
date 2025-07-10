@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>你来比划我来猜 - 词卡管理</title>
+    <style>
+        body {
+            font-family: '微软雅黑', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: white;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .category {
+            margin-bottom: 40px;
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        
+        .category-title {
+            font-size: 1.8em;
+            color: #4a5568;
+            margin-bottom: 20px;
+            text-align: center;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+        }
+        
+        .card {
+            background: white;
+            border: 3px solid #667eea;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            border-color: #764ba2;
+        }
+        
+        .card-word {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+        
+        .card-hint {
+            font-size: 0.9em;
+            color: #718096;
+            font-style: italic;
+        }
+        
+        .difficulty {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            font-size: 0.7em;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .easy { background-color: #48bb78; }
+        .medium { background-color: #ed8936; }
+        .hard { background-color: #e53e3e; }
+        
+        .back-btn {
+            display: inline-block;
+            margin-top: 30px;
+            padding: 10px 25px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+        }
+        .back-btn:hover {
+            background: #764ba2;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📚 所有词卡</h1>
+        <div id="cards-container"></div>
+        <a href="index.html" class="back-btn">返回主页</a>
+    </div>
+    
+    <script>
+        const allCards = [
+            { word: '小猫', hint: '学猫叫，做洗脸动作', difficulty: 'easy', category: '动物类' },
+            { word: '小狗', hint: '学狗叫，摇尾巴', difficulty: 'easy', category: '动物类' },
+            { word: '兔子', hint: '竖耳朵，蹦蹦跳跳', difficulty: 'easy', category: '动物类' },
+            { word: '大象', hint: '用手臂做象鼻子甩动', difficulty: 'medium', category: '动物类' },
+            { word: '猴子', hint: '抓痒痒，做攀爬动作', difficulty: 'medium', category: '动物类' },
+            { word: '老虎', hint: '做扑食动作，张大嘴', difficulty: 'hard', category: '动物类' },
+            { word: '跑步', hint: '原地做跑步动作', difficulty: 'easy', category: '动作类' },
+            { word: '跳舞', hint: '摆动身体，做舞蹈动作', difficulty: 'easy', category: '动作类' },
+            { word: '刷牙', hint: '做刷牙的动作', difficulty: 'easy', category: '动作类' },
+            { word: '游泳', hint: '做游泳划水动作', difficulty: 'medium', category: '动作类' },
+            { word: '骑车', hint: '做骑自行车动作', difficulty: 'medium', category: '动作类' },
+            { word: '踢球', hint: '做踢足球动作', difficulty: 'medium', category: '动作类' },
+            { word: '苹果', hint: '做啃苹果动作', difficulty: 'easy', category: '食物类' },
+            { word: '香蕉', hint: '做剥香蕉皮动作', difficulty: 'easy', category: '食物类' },
+            { word: '面条', hint: '做吃面条动作', difficulty: 'medium', category: '食物类' },
+            { word: '冰淇淋', hint: '做舔冰淇淋动作', difficulty: 'medium', category: '食物类' },
+            { word: '包子', hint: '双手捧着吃的动作', difficulty: 'hard', category: '食物类' },
+            { word: '西瓜', hint: '做切西瓜、吃西瓜动作', difficulty: 'medium', category: '食物类' },
+            { word: '写字', hint: '做写字动作', difficulty: 'easy', category: '学习用品' },
+            { word: '画画', hint: '做画画动作', difficulty: 'easy', category: '学习用品' },
+            { word: '读书', hint: '翻书页，做读书动作', difficulty: 'easy', category: '学习用品' },
+            { word: '剪刀', hint: '做剪东西动作', difficulty: 'medium', category: '学习用品' },
+            { word: '橡皮', hint: '做擦字动作', difficulty: 'hard', category: '学习用品' },
+            { word: '尺子', hint: '做量长度、画直线动作', difficulty: 'hard', category: '学习用品' },
+            { word: '汽车', hint: '做开车动作', difficulty: 'easy', category: '交通工具' },
+            { word: '飞机', hint: '张开双臂做飞行动作', difficulty: 'easy', category: '交通工具' },
+            { word: '火车', hint: '做火车开动作，发出"呜呜"声', difficulty: 'medium', category: '交通工具' },
+            { word: '轮船', hint: '做船在水上摇摆动作', difficulty: 'medium', category: '交通工具' },
+            { word: '公交车', hint: '做司机开车、开门动作', difficulty: 'hard', category: '交通工具' },
+            { word: '自行车', hint: '做骑车动作', difficulty: 'medium', category: '交通工具' },
+            { word: '下雨', hint: '手指做雨滴往下落动作', difficulty: 'easy', category: '天气现象' },
+            { word: '太阳', hint: '双手画圆圈，做温暖动作', difficulty: 'easy', category: '天气现象' },
+            { word: '刮风', hint: '做风吹动作，头发飘动', difficulty: 'medium', category: '天气现象' },
+            { word: '下雪', hint: '做雪花飘落动作', difficulty: 'medium', category: '天气现象' },
+            { word: '彩虹', hint: '用手画弧形，表示彩色', difficulty: 'hard', category: '天气现象' },
+            { word: '打雷', hint: '做闪电动作，表示害怕', difficulty: 'hard', category: '天气现象' },
+            { word: '张牙舞爪', hint: '张开嘴巴，挥动手臂做凶猛的样子', difficulty: 'easy', category: '成语类' },
+            { word: '手舞足蹈', hint: '高兴地挥动手臂，跳舞的动作', difficulty: 'easy', category: '成语类' },
+            { word: '摇头摆尾', hint: '左右摇头，扭动身体像小狗', difficulty: 'easy', category: '成语类' },
+            { word: '抓耳挠腮', hint: '用手抓耳朵，挠脸颊，表示着急', difficulty: 'easy', category: '成语类' },
+            { word: '拍手叫好', hint: '用力拍手，嘴巴张开喊好', difficulty: 'easy', category: '成语类' },
+            { word: '守株待兔', hint: '靠着一棵树坐着等待，眼睛盯着前方', difficulty: 'medium', category: '成语类' },
+            { word: '画蛇添足', hint: '先画蛇的动作，然后给它加上脚', difficulty: 'medium', category: '成语类' },
+            { word: '井底之蛙', hint: '蹲在地上，手做圆圈放在头顶，向上看', difficulty: 'medium', category: '成语类' },
+            { word: '掩耳盗铃', hint: '用手捂住耳朵，偷偷摸摸拿东西', difficulty: 'medium', category: '成语类' },
+            { word: '狐假虎威', hint: '先做狐狸狡猾的样子，再做老虎威猛的动作', difficulty: 'medium', category: '成语类' },
+            { word: '亡羊补牢', hint: '先做丢失的难过样子，然后做修补围栏的样子', difficulty: 'medium', category: '成语类' },
+            { word: '刻舟求剑', hint: '在船上刻记号，然后跳下水找东西', difficulty: 'medium', category: '成语类' },
+            { word: '盲人摸象', hint: '闭上眼睛，用手到处摸，做出困惑的表情', difficulty: 'hard', category: '成语类' },
+            { word: '对牛弹琴', hint: '做弹琴的动作，然后做牛的样子表示听不懂', difficulty: 'hard', category: '成语类' },
+            { word: '杯弓蛇影', hint: '拿杯子喝水，突然害怕地后退', difficulty: 'hard', category: '成语类' },
+            { word: '鹤立鸡群', hint: '先做鸡的样子，然后站得很高很直像鹤', difficulty: 'hard', category: '成语类' },
+            { word: '叶公好龙', hint: '先做喜欢的样子，然后看到真的时候害怕', difficulty: 'hard', category: '成语类' },
+            { word: '买椟还珠', hint: '拿一个盒子，把里面的珠子扔掉，只要盒子', difficulty: 'hard', category: '成语类' },
+            { word: '南辕北辙', hint: '指着南边说要去，但是走向北边', difficulty: 'hard', category: '成语类' },
+            { word: '塞翁失马', hint: '先做失去的难过样子，然后变成高兴的样子', difficulty: 'hard', category: '成语类' }
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const cardsContainer = document.getElementById('cards-container');
+            const categories = {};
+
+            allCards.forEach(card => {
+                if (!categories[card.category]) {
+                    categories[card.category] = [];
+                }
+                categories[card.category].push(card);
+            });
+
+            for (const categoryName in categories) {
+                const categoryDiv = document.createElement('div');
+                categoryDiv.classList.add('category');
+
+                const categoryTitleDiv = document.createElement('div');
+                categoryTitleDiv.classList.add('category-title');
+                categoryTitleDiv.textContent = categoryName;
+                categoryDiv.appendChild(categoryTitleDiv);
+
+                const cardsGridDiv = document.createElement('div');
+                cardsGridDiv.classList.add('cards-grid');
+
+                categories[categoryName].forEach(card => {
+                    const cardDiv = document.createElement('div');
+                    cardDiv.classList.add('card');
+
+                    const difficultyDiv = document.createElement('div');
+                    difficultyDiv.classList.add('difficulty', card.difficulty);
+                    difficultyDiv.textContent = card.difficulty === 'easy' ? '🟢' : (card.difficulty === 'medium' ? '🟡' : '🔴');
+                    cardDiv.appendChild(difficultyDiv);
+
+                    const wordDiv = document.createElement('div');
+                    wordDiv.classList.add('card-word');
+                    wordDiv.textContent = card.word;
+                    cardDiv.appendChild(wordDiv);
+
+                    const hintDiv = document.createElement('div');
+                    hintDiv.classList.add('card-hint');
+                    hintDiv.textContent = card.hint;
+                    cardDiv.appendChild(hintDiv);
+
+                    cardsGridDiv.appendChild(cardDiv);
+                });
+                categoryDiv.appendChild(cardsGridDiv);
+                cardsContainer.appendChild(categoryDiv);
+            }
+        });
+    </script>
+</body>
+</html>

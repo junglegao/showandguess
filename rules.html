@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>你来比划我来猜 - 游戏规则</title>
+    <style>
+        body {
+            font-family: '微软雅黑', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .instructions-container {
+            max-width: 800px;
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .instructions-container h1 {
+            color: #4a5568;
+            font-size: 2.2em;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .instructions-container ul {
+            list-style: none;
+            padding: 0;
+            text-align: left;
+            color: #2d3748;
+            line-height: 1.8;
+            font-size: 1.1em;
+        }
+        .instructions-container ul li {
+            margin-bottom: 10px;
+        }
+        .instructions-container ul li strong {
+            color: #667eea;
+        }
+        .back-btn {
+            display: inline-block;
+            margin-top: 30px;
+            padding: 10px 25px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+        }
+        .back-btn:hover {
+            background: #764ba2;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="instructions-container">
+        <h1>🎮 游戏规则</h1>
+        <ul>
+            <li><strong>比划者：</strong>用手势、动作、表情来表演词语，不能说话，不能指向实物</li>
+            <li><strong>猜词者：：</strong>根据比划猜出词语</li>
+            <li><strong>难度标识：：</strong>🟢简单 🟡中等 🔴困难</li>
+            <li><strong>提示：：</strong>可以根据卡片下方的小提示来表演</li>
+            <li>点击词卡可以放大显示，方便表演者看清</li>
+        </ul>
+        <a href="index.html" class="back-btn">返回主页</a>
+    </div>
+</body>
+</html>

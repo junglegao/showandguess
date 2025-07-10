@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>你来比划我来猜 - 小学2年级词卡</title>
+    <style>
+        body {
+            font-family: '微软雅黑', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        h1 {
+            text-align: center;
+            color: white;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .random-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 20px 40px;
+            font-size: 1.8em;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            margin-top: 50px;
+        }
+        
+        .random-btn:hover {
+            background: #764ba2;
+            transform: scale(1.05);
+        }
+        
+        .selected-card {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border: 4px solid #667eea;
+            border-radius: 20px;
+            padding: 40px;
+            color: #2d3748;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            z-index: 1000;
+            min-width: 300px;
+            text-align: center;
+        }
+        
+        .selected-card #selected-word-container {
+            font-size: 2.5em; /* Apply main font size to container */
+            font-weight: bold;
+            color: #2d3748;
+            display: flex; /* Use flexbox to align icon and text */
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 8px; /* Space between word and hint */
+        }
+
+        .selected-card #selected-difficulty-icon {
+            font-size: 0.8em; /* Smaller icon */
+            margin-right: 10px; /* Space between icon and word */
+        }
+
+        .selected-card .card-hint-display {
+            font-size: 0.6em;
+            color: #718096;
+            font-style: italic;
+            margin-top: 15px;
+        }
+        
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            cursor: pointer; 
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 2em;
+            cursor: pointer;
+            color: #718096;
+        }
+        
+        .links-container {
+            margin-top: 30px;
+            display: flex;
+            gap: 20px;
+        }
+        
+        .links-container a {
+            color: white;
+            text-decoration: none;
+            border-bottom: 1px solid white;
+            padding-bottom: 2px;
+            font-size: 1.2em;
+            transition: all 0.3s ease;
+        }
+        
+        .links-container a:hover {
+            color: #e0e0e0;
+            border-color: #e0e0e0;
+        }
+
+        /* New hidden class */
+        .hidden {
+            display: none !important;
+            pointer-events: none; /* Added this line */
+        }
+
+        .difficulty-selection {
+            margin-top: 30px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .difficulty-selection button {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.5);
+            border-radius: 20px;
+            padding: 8px 15px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .difficulty-selection button:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .difficulty-selection button.active {
+            background: white;
+            color: #667eea;
+            font-weight: bold;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎭 你来比划我来猜 🎭</h1>
+        
+        <div class="difficulty-selection">
+            <button id="difficulty-all" class="active" onclick="setDifficulty('all')">全部</button>
+            <button id="difficulty-easy" onclick="setDifficulty('easy')">简单</button>
+            <button id="difficulty-medium" onclick="setDifficulty('medium')">中等</button>
+            <button id="difficulty-hard" onclick="setDifficulty('hard')">困难</button>
+        </div>
+
+        <button class="random-btn" onclick="randomCard()">🎲 随机选择词语</button>
+        
+        <div class="links-container">
+            <a href="rules.html">查看游戏规则</a>
+            <a href="manage.html">管理词卡</a>
+        </div>
+    </div>
+    
+    <div class="overlay hidden" onclick="hideCard()"></div>
+    <div class="selected-card hidden">
+        <button class="close-btn" onclick="hideCard()">&times;</button>
+        <div id="selected-word-container">
+            <span id="selected-difficulty-icon"></span>
+            <span id="selected-word-text"></span>
+        </div>
+        <div id="selected-hint" class="card-hint-display"></div>
+    </div>
+    
+    <script>
+        const allCards = [
+            { word: '小猫', hint: '学猫叫，做洗脸动作', difficulty: 'easy' },
+            { word: '小狗', hint: '学狗叫，摇尾巴', difficulty: 'easy' },
+            { word: '兔子', hint: '竖耳朵，蹦蹦跳跳', difficulty: 'easy' },
+            { word: '大象', hint: '用手臂做象鼻子甩动', difficulty: 'medium' },
+            { word: '猴子', hint: '抓痒痒，做攀爬动作', difficulty: 'medium' },
+            { word: '老虎', hint: '做扑食动作，张大嘴', difficulty: 'hard' },
+            { word: '跑步', hint: '原地做跑步动作', difficulty: 'easy' },
+            { word: '跳舞', hint: '摆动身体，做舞蹈动作', difficulty: 'easy' },
+            { word: '刷牙', hint: '做刷牙的动作', difficulty: 'easy' },
+            { word: '游泳', hint: '做游泳划水动作', difficulty: 'medium' },
+            { word: '骑车', hint: '做骑自行车动作', difficulty: 'medium' },
+            { word: '踢球', hint: '做踢足球动作', difficulty: 'medium' },
+            { word: '苹果', hint: '做啃苹果动作', difficulty: 'easy' },
+            { word: '香蕉', hint: '做剥香蕉皮动作', difficulty: 'easy' },
+            { word: '面条', hint: '做吃面条动作', difficulty: 'medium' },
+            { word: '冰淇淋', hint: '做舔冰淇淋动作', difficulty: 'medium' },
+            { word: '包子', hint: '双手捧着吃的动作', difficulty: 'hard' },
+            { word: '西瓜', hint: '做切西瓜、吃西瓜动作', difficulty: 'medium' },
+            { word: '写字', hint: '做写字动作', difficulty: 'easy' },
+            { word: '画画', hint: '做画画动作', difficulty: 'easy' },
+            { word: '读书', hint: '翻书页，做读书动作', difficulty: 'easy' },
+            { word: '剪刀', hint: '做剪东西动作', difficulty: 'medium' },
+            { word: '橡皮', hint: '做擦字动作', difficulty: 'hard' },
+            { word: '尺子', hint: '做量长度、画直线动作', difficulty: 'hard' },
+            { word: '汽车', hint: '做开车动作', difficulty: 'easy' },
+            { word: '飞机', hint: '张开双臂做飞行动作', difficulty: 'easy' },
+            { word: '火车', hint: '做火车开动作，发出"呜呜"声', difficulty: 'medium' },
+            { word: '轮船', hint: '做船在水上摇摆动作', difficulty: 'medium' },
+            { word: '公交车', hint: '做司机开车、开门动作', difficulty: 'hard' },
+            { word: '自行车', hint: '做骑车动作', difficulty: 'medium' },
+            { word: '下雨', hint: '手指做雨滴往下落动作', difficulty: 'easy' },
+            { word: '太阳', hint: '双手画圆圈，做温暖动作', difficulty: 'easy' },
+            { word: '刮风', hint: '做风吹动作，头发飘动', difficulty: 'medium' },
+            { word: '下雪', hint: '做雪花飘落动作', difficulty: 'medium' },
+            { word: '彩虹', hint: '用手画弧形，表示彩色', difficulty: 'hard' },
+            { word: '打雷', hint: '做闪电动作，表示害怕', difficulty: 'hard' },
+            // 简单级别 - 动作明显，容易理解
+  { word: '张牙舞爪', hint: '张开嘴巴，挥动手臂做凶猛的样子', difficulty: 'easy' },
+  { word: '手舞足蹈', hint: '高兴地挥动手臂，跳舞的动作', difficulty: 'easy' },
+  { word: '摇头摆尾', hint: '左右摇头，扭动身体像小狗', difficulty: 'easy' },
+  { word: '抓耳挠腮', hint: '用手抓耳朵，挠脸颊，表示着急', difficulty: 'easy' },
+  { word: '拍手叫好', hint: '用力拍手，嘴巴张开喊好', difficulty: 'easy' },
+  
+  // 中等级别 - 需要一些想象力
+  { word: '守株待兔', hint: '靠着一棵树坐着等待，眼睛盯着前方', difficulty: 'medium' },
+  { word: '画蛇添足', hint: '先画蛇的动作，然后给它加上脚', difficulty: 'medium' },
+  { word: '井底之蛙', hint: '蹲在地上，手做圆圈放在头顶，向上看', difficulty: 'medium' },
+  { word: '掩耳盗铃', hint: '用手捂住耳朵，偷偷摸摸拿东西', difficulty: 'medium' },
+  { word: '狐假虎威', hint: '先做狐狸狡猾的样子，再做老虎威猛的动作', difficulty: 'medium' },
+  { word: '亡羊补牢', hint: '先做丢失的难过样子，然后做修补围栏的样子', difficulty: 'medium' },
+  { word: '刻舟求剑', hint: '在船上刻记号，然后跳下水找东西', difficulty: 'medium' },
+  
+  // 困难级别 - 需要更多理解和创意
+  { word: '盲人摸象', hint: '闭上眼睛，用手到处摸，做出困惑的表情', difficulty: 'hard' },
+  { word: '对牛弹琴', hint: '做弹琴的动作，然后做牛的样子表示听不懂', difficulty: 'hard' },
+  { word: '杯弓蛇影', hint: '拿杯子喝水，突然害怕地后退', difficulty: 'hard' },
+  { word: '鹤立鸡群', hint: '先做鸡的样子，然后站得很高很直像鹤', difficulty: 'hard' },
+  { word: '叶公好龙', hint: '先做喜欢的样子，然后看到真的时候害怕', difficulty: 'hard' },
+  { word: '买椟还珠', hint: '拿一个盒子，把里面的珠子扔掉，只要盒子', difficulty: 'hard' },
+  { word: '南辕北辙', hint: '指着南边说要去，但是走向北边', difficulty: 'hard' },
+  { word: '塞翁失马', hint: '先做失去的难过样子，然后变成高兴的样子', difficulty: 'hard' }
+        ];
+        
+        let currentDifficulty = 'all'; // Default difficulty
+
+        function setDifficulty(difficulty) {
+            currentDifficulty = difficulty;
+            // Update active button styling
+            document.querySelectorAll('.difficulty-selection button').forEach(button => {
+                button.classList.remove('active');
+            });
+            document.getElementById(`difficulty-${difficulty}`).classList.add('active');
+        }
+
+        function showCard(card) {
+            const selectedWordText = document.getElementById('selected-word-text');
+            const selectedHintDisplay = document.getElementById('selected-hint');
+            const selectedDifficultyIcon = document.getElementById('selected-difficulty-icon');
+
+            selectedWordText.textContent = card.word;
+            selectedHintDisplay.textContent = card.hint;
+
+            // Set the difficulty icon
+            if (card.difficulty === 'easy') {
+                selectedDifficultyIcon.textContent = '🟢';
+            } else if (card.difficulty === 'medium') {
+                selectedDifficultyIcon.textContent = '🟡';
+            } else if (card.difficulty === 'hard') {
+                selectedDifficultyIcon.textContent = '🔴';
+            } else {
+                selectedDifficultyIcon.textContent = ''; // Clear if no difficulty
+            }
+
+            document.querySelector('.overlay').classList.remove('hidden');
+            document.querySelector('.selected-card').classList.remove('hidden');
+        }
+        
+        function hideCard() {
+            document.querySelector('.overlay').classList.add('hidden');
+            document.querySelector('.selected-card').classList.add('hidden');
+        }
+        
+        function randomCard() {
+            const selectedWordText = document.getElementById('selected-word-text');
+            const selectedHintDisplay = document.getElementById('selected-hint');
+            const selectedDifficultyIcon = document.getElementById('selected-difficulty-icon');
+            const overlay = document.querySelector('.overlay');
+            const selectedCard = document.querySelector('.selected-card');
+
+            // Filter cards based on current difficulty
+            const filteredCards = allCards.filter(card => {
+                return currentDifficulty === 'all' || card.difficulty === currentDifficulty;
+            });
+
+            if (filteredCards.length === 0) {
+                selectedWordText.textContent = '当前难度下没有词卡';
+                selectedHintDisplay.textContent = '';
+                selectedDifficultyIcon.textContent = '';
+                overlay.classList.remove('hidden');
+                selectedCard.classList.remove('hidden');
+                return; // Exit if no cards found
+            }
+
+            // Show the overlay and card immediately
+            overlay.classList.remove('hidden');
+            selectedCard.classList.remove('hidden');
+
+            // Set initial animation text and clear hint and icon
+            selectedWordText.textContent = '词卡抽取中...';
+            selectedHintDisplay.textContent = ''; 
+            selectedDifficultyIcon.textContent = ''; // Clear icon during animation
+
+            let animationInterval;
+            const animationDuration = 1000; // 1 second
+            const animationSpeed = 100; // Update placeholder every 100ms (optional, but keeps interval running)
+
+            // Start shuffling animation (only showing placeholder)
+            animationInterval = setInterval(() => {
+                // No need to change word here, just keep the placeholder
+            }, animationSpeed);
+
+            // After animation duration, clear interval and show the final word
+            setTimeout(() => {
+                clearInterval(animationInterval);
+                const finalRandomCardData = filteredCards[Math.floor(Math.random() * filteredCards.length)];
+                showCard(finalRandomCardData);
+            }, animationDuration);
+        }
+    </script>
+</body>
+</html>
